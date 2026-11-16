@@ -1,0 +1,524 @@
+<!DOCTYPE html> 
+<html lang="el"> 
+<head> 
+<meta charset="UTF-8"> 
+<meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+<title>Οπτικοποιημένο Σχολικό Πρόγραμμα (Cloud)</title> 
+<style> 
+body { font-family: 'Segoe UI', sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; user-select: none; } 
+.class-selector-bar { background: #2c3e50; color: white; padding: 15px; border-radius: 12px; text-align: center; margin-bottom: 25px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); display: flex; justify-content: center; align-items: center; gap: 20px; flex-wrap: wrap; }
+.class-selector-bar label { font-size: 16px; font-weight: bold; }
+#class-select, #day-select { padding: 8px 16px; font-size: 16px; font-weight: bold; border-radius: 6px; border: none; cursor: pointer; color: #2c3e50; background: white; }
+
+.mode-selector { background: #34495e; padding: 6px 12px; border-radius: 8px; display: flex; align-items: center; gap: 8px; cursor: pointer; border: 1px solid #4e6d8d; }
+.mode-selector input { cursor: pointer; width: 18px; height: 18px; }
+
+.app-container { display: flex; gap: 25px; max-width: 1400px; margin: 0 auto; align-items: flex-start; justify-content: center; } 
+
+.schedule-section { flex: 0 1 560px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); } 
+.lessons-section { flex: 1; background: #ffffff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); min-width: 340px; max-width: 650px; max-height: 85vh; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; position: sticky; top: 20px; } 
+
+.bank-group h3 { margin: 0 0 8px 0; color: #2c3e50; font-size: 16px; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; }
+
+h2 { margin-top: 0; color: #2c3e50; text-align: center; font-size: 22px; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; } 
+.instruction { font-size: 13px; color: #7f8c8d; text-align: center; margin-bottom: 10px; font-style: italic; } 
+
+table { width: 100%; border-collapse: collapse; margin-bottom: 20px; table-layout: fixed; } 
+th, td { border: 2px solid #e2e8f0; padding: 6px; text-align: center; height: 240px; max-height: 240px; vertical-align: middle; position: relative; overflow: hidden; } 
+th { background-color: #34495e; color: white; font-weight: 600; height: 45px; font-size: 15px; } 
+
+th:first-child,
+td:first-child { width: 75px; } 
+td:first-child { background-color: #edf2f7; font-weight: bold; color: #4a5568; height: auto; font-size: 16px; padding: 4px; } 
+
+.lesson-card { padding: 4px; border-radius: 8px; color: #2c3e50; font-weight: bold; font-size: 12px; cursor: pointer; text-align: center; box-shadow: 0 3px 6px rgba(0,0,0,0.1); touch-action: manipulation; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 2px solid #bdc3c7; background: white; width: 100%; height: 100%; box-sizing: border-box; overflow: hidden; transition: transform 0.1s; } 
+.lesson-card:active { transform: scale(0.97); }
+.lesson-card.selected-card {
+    box-shadow: 0 0 0 4px #e74c3c !important;
+    background: #fdf2f2 !important;
+}
+.lesson-card.image-card img { max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; border-radius: 6px; display: block; background: #fff; margin: auto; }
+.lesson-icon { font-size: 36px; } 
+.lessons-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 12px; } 
+
+.drop-zone { background-color: #f8fafc; transition: background 0.2s; cursor: pointer; height: 240px; max-height: 240px; box-sizing: border-box; overflow: hidden; } 
+.drop-zone:hover { background-color: #edf2f7; }
+
+.drop-zone .lesson-card {
+    height: 224px !important;
+    max-height: 224px !important;
+    width: 100% !important;
+    margin: 0 auto;
+    box-shadow: none;
+    box-sizing: border-box;
+    border-radius: 6px !important;
+    background: #ffffff;
+    cursor: default;
+}
+.drop-zone .lesson-card.image-card img {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    object-fit: contain !important;
+    border-radius: 4px;
+}
+
+.double-zone { display: flex; gap: 6px; padding: 6px; align-items: center; justify-content: center; background-color: #f8fafc; height: 240px; box-sizing: border-box; }
+.double-zone .sub-zone { flex: 1; height: 100%; max-height: 224px; border: 2px dashed #cbd5e1; border-radius: 6px; display: flex; align-items: center; justify-content: center; position: relative; background: #fff; overflow: hidden; cursor: pointer; }
+.double-zone .sub-zone .lesson-card {
+    height: 100% !important;
+    max-height: 220px !important;
+    width: 100% !important;
+    margin: 0;
+}
+.double-zone .sub-zone .lesson-card.image-card img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: contain !important;
+}
+
+.triple-zone { display: flex; gap: 4px; padding: 6px; align-items: center; justify-content: center; background-color: #f8fafc; height: 240px; box-sizing: border-box; }
+.triple-zone .sub-zone { flex: 1; height: 100%; max-height: 224px; border: 2px dashed #cbd5e1; border-radius: 6px; display: flex; align-items: center; justify-content: center; position: relative; background: #fff; overflow: hidden; cursor: pointer; }
+.triple-zone .sub-zone .lesson-card {
+    height: 100% !important;
+    max-height: 220px !important;
+    width: 100% !important;
+    margin: 0;
+}
+.triple-zone .sub-zone .lesson-card.image-card img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: contain !important;
+}
+
+.break-row td:first-child { background-color: #e8f4f8; color: #2980b9; }
+.break-row .drop-zone { background-color: #f0f7fa; }
+.home-row td:first-child { background-color: #eafaf1; color: #27ae60; }
+.home-row .drop-zone { background-color: #f4fcf7; }
+
+.delete-item { position: absolute; top: 4px; right: 4px; background: rgba(192, 57, 43, 0.9); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10; font-weight: bold; } 
+#reset-btn { display: block; width: 100%; padding: 14px; background-color: #e74c3c; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; } 
+</style> 
+</head> 
+<body> 
+
+<div class="class-selector-bar">
+    <div>
+        <label for="class-select">🏫 Τμήμα:</label>
+        <select id="class-select">
+            <option value="Α1ΓΕΩ">Α1ΓΕΩ</option>
+            <option value="Α2ΓΕΩ">Α2ΓΕΩ</option>
+            <option value="Α3ΑΓΓ">Α3ΑΓΓ</option>
+            <option value="Α4ΑΔ">Α4ΑΔ</option>
+            <option value="Β1ΓΕΩ">Β1ΓΕΩ</option>
+            <option value="Β2ΑΔ">Β2ΑΔ</option>
+            <option value="Γ1ΓΕΩ">Γ1ΓΕΩ</option>
+            <option value="Γ2ΓΕΝ">Γ2ΓΕΝ</option>
+            <option value="Γ2ΑΓΓ">Γ2ΑΓΓ</option>
+            <option value="Γ3ΑΔ">Γ3ΑΔ</option>
+            <option value="Δ1ΑΓΓ">Δ1ΑΓΓ</option>
+            <option value="Δ2ΑΓΓ">Δ2ΑΓΓ</option>
+            <option value="Δ3ΓΕΩ">Δ3ΓΕΩ</option>
+            <option value="Δ4ΥΦ">Δ4ΥΦ</option>
+            <option value="Δ5ΑΔ">Δ5ΑΔ</option>
+            <option value="Ε1ΓΕΩ">Ε1ΓΕΩ</option>
+            <option value="ΣΤ1ΑΓΓ">ΣΤ1ΑΓΓ</option>
+            <option value="ΣΤ2ΑΔ">ΣΤ2ΑΔ</option>
+        </select>
+    </div>
+    <div>
+        <label for="day-select">📅 Ημέρα:</label>
+        <select id="day-select">
+            <option value="Δευτέρα">Δευτέρα</option>
+            <option value="Τρίτη">Τρίτη</option>
+            <option value="Τετάρτη">Τετάρτη</option>
+            <option value="Πέμπτη">Πέμπτη</option>
+            <option value="Παρασκευή">Παρασκευή</option>
+        </select>
+    </div>
+    <div class="mode-selector" title="Κάντε κλικ σε ένα κουτί για να το κάνετε διπλό (2 φωτογραφίες)">
+        <input type="checkbox" id="double-mode-toggle">
+        <label for="double-mode-toggle" style="color: white; font-size: 13px; cursor: pointer;">📂 2 Φωτογραφίες με κλικ</label>
+    </div>
+    <div class="mode-selector" title="Κάντε κλικ σε ένα κουτί για να το κάνετε τριπλό (3 φωτογραφίες)">
+        <input type="checkbox" id="triple-mode-toggle">
+        <label for="triple-mode-toggle" style="color: white; font-size: 13px; cursor: pointer;">📂📂 3 Φωτογραφίες με κλικ</label>
+    </div>
+</div>
+
+<div class="app-container"> 
+<div class="schedule-section"> 
+<h2>🗓️ Ημερήσιο Σχολικό Πρόγραμμα</h2> 
+<table id="schedule-table"> 
+    <thead> 
+        <tr> 
+            <th>Ώρα</th> 
+            <th>Πρόγραμμα Ημέρας</th> 
+        </tr> 
+    </thead> 
+    <tbody></tbody> 
+</table> 
+<button id="reset-btn">🔄 Καθαρισμός Ημέρας</button> </div> 
+
+<div class="lessons-section"> 
+    <div>
+        <h2>🗂️ Κάρτες Μαθημάτων</h2> 
+        <p class="instruction">Πατήστε μια κάρτα και μετά πατήστε το κουτάκι (ή σύρτέ την)</p> 
+        <div class="lessons-grid" id="lessons-bank"></div> 
+    </div>
+
+    <div class="bank-group">
+        <h3>👥 ΕΕΠ - ΕΒΠ</h3>
+        <div class="lessons-grid" id="eep-bank"></div>
+    </div>
+</div> 
+</div> 
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyBayHohACVIzWTrocAdCR1kx2fp4q5tx5M",
+        authDomain: "schoolcloud-5a0be.firebaseapp.com",
+        databaseURL: "https://schoolcloud-5a0be-default-rtdb.firebaseio.com",
+        projectId: "schoolcloud-5a0be",
+        storageBucket: "schoolcloud-5a0be.firebasestorage.app",
+        messagingSenderId: "206794459874",
+        appId: "1:206794459874:web:212d5a30e68857e208ecbb"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const lessonsConfig = [ 
+            { name: "Γλώσσα (κος. Στράτος)", image: "gl1.jpg", borderColor: "#2980b9", count: 1 }, 
+            { name: "Γλώσσα (κ. Λέφα Μαρία)", image: "gl2.jpg", borderColor: "#2980b9", count: 1 }, 
+            { name: "Γλώσσα (κ. Πιτ)", image: "gl3.jpg", borderColor: "#2980b9", count: 1 }, 
+            { name: "Μαθηματικά (κος. Σταύρος)", image: "mat1.jpg", borderColor: "#c0392b", count: 1 }, 
+            { name: "Μαθηματικά (κ. Αντιγόνη)", image: "mat2.jpg", borderColor: "#c0392b", count: 1 }, 
+            { name: "Κ. & Π. Αγωγή (κ. Χρυσούλα)", image: "kea1.jpg", borderColor: "#1abc9c", count: 1 }, 
+            { name: "Κ. & Π. Αγωγή (κος. Γιάννης)", image: "kea2.jpg", borderColor: "#1abc9c", count: 1 }, 
+            { name: "Κ. & Π. Αγωγή (κ. Μαρία Βασ.)", image: "kea3.jpg", borderColor: "#1abc9c", count: 1 }, 
+            { name: "Αισθητική Αγωγή (κ. Μαρία Όλγα)", image: "ΑΙΣΘΗΤΙΚΗ ΑΓΩΓΗ1.jpg", borderColor: "#f1c40f", count: 1 }, 
+            { name: "Αισθητική Αγωγή (κος Νεκτάριος)", image: "ΑΙΣΘΗΤΙΚΗ ΑΓΩΓΗ2.jpg", borderColor: "#f1c40f", count: 1 }, 
+            { name: "Αισθητική Αγωγή (κ. Κατερίνα)", image: "ΑΙΣΘΗΤΙΚΗ ΑΓΩΓΗ3.jpg", borderColor: "#f1c40f", count: 1 }, 
+            { name: "Μουσική (κος Βασίλης)", image: "music.jpg", borderColor: "#e84393", count: 1 }, 
+            { name: "Γυμναστική (κ. Ευδοξία)", image: "gym1.jpg", borderColor: "#ff7675", count: 1 }, 
+            { name: "Γυμναστική (κ. Γιώτα)", image: "gym2.jpg", borderColor: "#ff7675", count: 1 }, 
+            { name: "Πληροφορική (κ. Φωτεινή)", image: "tpe.jpg", borderColor: "#34495e", count: 1 }, 
+            { name: "Αγγειοπλαστική (κ. Γεωργία)", image: "ΑΓΓΕΙΟΠΛΑΣΤΙΚΗ1.jpg", borderColor: "#ba8b00", count: 1 }, 
+            { name: "Αγγειοπλαστική (κ. Πόλυ)", image: "ΑΓΓΕΙΟΠΛΑΣΤΙΚΗ2.jpg", borderColor: "#ba8b00", count: 1 }, 
+            { name: "Αγγειοπλαστική (κος Νεκτάριος)", image: "ΑΓΓΕΙΟΠΛΑΣΤΙΚΗ3.jpg", borderColor: "#ba8b00", count: 1 }, 
+            { name: "Γεωπονία (κος. Θανάσης)", image: "geo1.jpg", borderColor: "#10ac84", count: 1 }, 
+            { name: "Γεωπονία (κ. Μαρία)", image: "geo2.jpg", borderColor: "#10ac84", count: 1 }, 
+            { name: "Γεωπονία (κος. Σταμάτης)", image: "geo3.jpg", borderColor: "#10ac84", count: 1 }, 
+            { name: "Γεωπονία (κ. Ελένη)", image: "geo4.jpg", borderColor: "#10ac84", count: 1 }, 
+            { name: "Αυτόνομη Διαβίωση (κ. Εύα)", image: "ΑΥΤΟΝΟΜΗ ΔΙΑΒΙΩΣΗ1.jpg", borderColor: "#54a0ff", count: 1 }, 
+            { name: "Αυτόνομη Διαβίωση (κ. Μαρία Τζ.)", image: "ΑΥΤΟΝΟΜΗ ΔΙΑΒΙΩΣΗ2.jpg", borderColor: "#54a0ff", count: 1 }, 
+            { name: "Αυτόνομη Διαβίωση (κ. Μαρία Βασ.)", image: "ΑΥΤΟΝΟΜΗ ΔΙΑΒΙΩΣΗ3.jpg", borderColor: "#54a0ff", count: 1 }, 
+            { name: "Αυτόνομη Διαβίωση (κ. Αναστασία)", image: "ΑΥΤΟΝΟΜΗ ΔΙΑΒΙΩΣΗ4.jpg", borderColor: "#54a0ff", count: 1 }, 
+            { name: "Διάλειμμα", icon: "🥪", borderColor: "#7f8c8d", count: 1 },
+            { name: "Σπίτι", icon: "🏡", borderColor: "#27ae60", count: 1 }
+        ]; 
+
+        const eepConfig = [
+            { name: "Φυσικοθεραπεία (κ. Μαρία)", image: "fys.jpg", borderColor: "#00b894" },
+            { name: "Εργοθεραπεία 1 (κ. Θεώνη)", image: "ergo1.jpg", borderColor: "#8e44ad" },
+            { name: "Εργοθεραπεία 2 (κ. Μαρία)", image: "ergo2.jpg", borderColor: "#8e44ad" },
+            { name: "Λογοθεραπεία (κ. Νίκη)", image: "logo_2.jpg", borderColor: "#e67e22" },
+            { name: "Ψυχολόγος 1 (κ. Μαντζουράνα)", image: "psy.jpg", borderColor: "#2980b9" },
+            { name: "Ψυχολόγος 2 (κ. Άρτεμις)", image: "psy1.jpg", borderColor: "#2980b9" },
+            { name: "Σχολικός Νοσηλευτής (κος. Ορέστης)", image: "sn1_2.jpg", borderColor: "#c0392b" },
+            { name: "Σχολική Νοσηλεύτρια (κ. Γρηγορία)", image: "sn2.jpg", borderColor: "#e84393" },
+            { name: "ΕΒΠ 1 (κ. Χριστίνα)", image: "evp5.jpg", borderColor: "#16a085" },
+            { name: "ΕΒΠ 2 (κ. Ευαγγελία)", image: "evp4.jpg", borderColor: "#16a085" },
+            { name: "ΕΒΠ 3 (κ. Ελένη)", image: "evp3.jpg", borderColor: "#16a085" },
+            { name: "ΕΒΠ 4 (κ. Αργυρώ)", image: "evp2.jpg", borderColor: "#16a085" },
+            { name: "ΕΒΠ 5 (κ. Ορσαλία)", image: "evp1.jpg", borderColor: "#16a085" },
+            { name: "Κοινωνική Λειτουργός 1", image: "k1.jpg", borderColor: "#d35400" },
+            { name: "Κοινωνική Λειτουργός 2 (κ. Χαρά)", image: "k2.jpg", borderColor: "#d35400" }
+        ];
+
+        const tbody = document.querySelector("#schedule-table tbody"); 
+        const bank = document.getElementById("lessons-bank"); 
+        const eepBank = document.getElementById("eep-bank");
+        const classSelect = document.getElementById("class-select");
+        const daySelect = document.getElementById("day-select");
+        const doubleModeToggle = document.getElementById("double-mode-toggle");
+        const tripleModeToggle = document.getElementById("triple-mode-toggle");
+
+        let selectedCard = null;
+        let currentListener = null;
+
+        doubleModeToggle.addEventListener("change", () => {
+            if (doubleModeToggle.checked) tripleModeToggle.checked = false;
+        });
+        tripleModeToggle.addEventListener("change", () => {
+            if (tripleModeToggle.checked) doubleModeToggle.checked = false;
+        });
+
+        const scheduleStructure = [
+            { id: "1", label: "1η", type: "lesson" },
+            { id: "2", label: "2η", type: "lesson" },
+            { id: "b1", label: "Διάλ.", type: "break" },
+            { id: "3", label: "3η", type: "lesson" },
+            { id: "b2", label: "Διάλ.", type: "break" },
+            { id: "4", label: "4η", type: "lesson" },
+            { id: "b3", label: "Διάλ.", type: "break" },
+            { id: "5", label: "5η", type: "lesson" },
+            { id: "b4", label: "Διάλ.", type: "break" },
+            { id: "6", label: "6η", type: "lesson" },
+            { id: "home", label: "Σπίτι", type: "home" }
+        ];
+
+        scheduleStructure.forEach(item => {
+            const row = document.createElement("tr");
+            if (item.type === "break") row.className = "break-row";
+            else if (item.type === "home") row.className = "home-row";
+            
+            row.innerHTML = `<td>${item.label}</td><td class="drop-zone" data-row="${item.id}"></td>`;
+            tbody.appendChild(row); 
+        });
+
+        let globalCardId = 0;
+
+        function createCardElement(item) {
+            const card = document.createElement("div"); 
+            card.className = "lesson-card"; 
+            card.style.borderColor = item.borderColor; 
+            card.style.borderWidth = "3px"; 
+            card.draggable = true; 
+            card.id = `lesson-${globalCardId++}`; 
+             
+            if (item.image) {
+                card.classList.add("image-card");
+                card.innerHTML = `<img src="${item.image}" alt="${item.name}" onerror="this.parentElement.innerHTML='<span style=\\'font-size:11px; font-weight:bold; padding:4px; text-align:center;\\'>${item.name}</span>';">`;
+            } else {
+                card.innerHTML = `<span class="lesson-icon">${item.icon}</span><span style="font-size:11px; text-align:center;">${item.name}</span>`; 
+            }
+
+            card.addEventListener("click", (e) => {
+                e.stopPropagation();
+                document.querySelectorAll(".lesson-card").forEach(c => c.classList.remove("selected-card"));
+                if (selectedCard === card) {
+                    selectedCard = null;
+                } else {
+                    selectedCard = card;
+                    card.classList.add("selected-card");
+                }
+            });
+
+            return card;
+        }
+
+        lessonsConfig.forEach(lesson => {
+            for (let i = 0; i < lesson.count; i++) {
+                bank.appendChild(createCardElement(lesson)); 
+            }
+        }); 
+
+        eepConfig.forEach(item => {
+            eepBank.appendChild(createCardElement(item));
+        });
+
+        document.addEventListener("dragstart", (e) => { 
+            const targetCard = e.target.closest(".lesson-card"); 
+            if (targetCard) e.dataTransfer.setData("text/plain", targetCard.id); 
+        }); 
+
+        document.querySelectorAll(".drop-zone").forEach(zone => {
+            zone.addEventListener("click", function(e) {
+                if (e.target.classList.contains("delete-item")) return;
+
+                if (selectedCard) {
+                    let target = this;
+                    if (this.classList.contains("double-zone") || this.classList.contains("triple-zone")) {
+                        const sub = e.target.closest(".sub-zone");
+                        if (sub) target = sub;
+                        else target = this.querySelector(".sub-zone");
+                    }
+                    insertCardToZone(selectedCard, target);
+                    selectedCard.classList.remove("selected-card");
+                    selectedCard = null;
+                    saveSchedule();
+                    return;
+                }
+
+                if (e.target.closest(".lesson-card")) return;
+
+                if (doubleModeToggle.checked) {
+                    if (this.classList.contains("double-zone")) {
+                        this.className = "drop-zone";
+                        this.innerHTML = "";
+                    } else {
+                        this.className = "drop-zone double-zone";
+                        this.innerHTML = `<div class="sub-zone" data-sub="1"></div><div class="sub-zone" data-sub="2"></div>`;
+                    }
+                } else if (tripleModeToggle.checked) {
+                    if (this.classList.contains("triple-zone")) {
+                        this.className = "drop-zone";
+                        this.innerHTML = "";
+                    } else {
+                        this.className = "drop-zone triple-zone";
+                        this.innerHTML = `<div class="sub-zone" data-sub="1"></div><div class="sub-zone" data-sub="2"></div><div class="sub-zone" data-sub="3"></div>`;
+                    }
+                } else {
+                    if (this.classList.contains("double-zone") || this.classList.contains("triple-zone")) {
+                        this.className = "drop-zone";
+                        this.innerHTML = "";
+                    }
+                }
+                saveSchedule();
+            });
+
+            zone.addEventListener("dragover", (e) => e.preventDefault());
+            zone.addEventListener("drop", function(e) { 
+                e.preventDefault(); 
+                const id = e.dataTransfer.getData("text/plain"); 
+                const originCard = document.getElementById(id); 
+                if (originCard) {
+                    let target = this;
+                    if (this.classList.contains("double-zone") || this.classList.contains("triple-zone")) {
+                        const sub = e.target.closest(".sub-zone");
+                        if (sub) target = sub;
+                        else target = this.querySelector(".sub-zone");
+                    }
+                    insertCardToZone(originCard, target); 
+                    saveSchedule();
+                }
+            }); 
+        }); 
+
+        function insertCardToZone(originCard, target) { 
+            const clone = originCard.cloneNode(true); 
+            clone.setAttribute("data-origin-id", originCard.id || originCard.getAttribute("data-origin-id"));
+            clone.id = ""; 
+            clone.style.cursor = "default"; 
+            clone.classList.remove("selected-card");
+             
+            clone.style.width = "100%"; 
+            clone.style.height = "100%"; 
+            clone.style.margin = "0"; 
+
+            const delBtn = document.createElement("button"); 
+            delBtn.className = "delete-item"; 
+            delBtn.innerHTML = "&times;"; 
+            delBtn.onclick = function(e) { 
+                e.stopPropagation(); 
+                this.parentElement.remove(); 
+                saveSchedule();
+            }; 
+            clone.appendChild(delBtn); 
+            target.innerHTML = ""; 
+            target.appendChild(clone); 
+        } 
+
+        function saveSchedule() {
+            const currentClass = classSelect.value;
+            const currentDay = daySelect.value;
+            const scheduleData = { layout: {}, cards: [] };
+             
+            document.querySelectorAll(".drop-zone").forEach(zone => {
+                const row = zone.getAttribute("data-row");
+
+                if (zone.classList.contains("double-zone")) scheduleData.layout[row] = "double";
+                else if (zone.classList.contains("triple-zone")) scheduleData.layout[row] = "triple";
+                else scheduleData.layout[row] = "single";
+
+                if (zone.classList.contains("double-zone") || zone.classList.contains("triple-zone")) {
+                    zone.querySelectorAll(".sub-zone").forEach(sub => {
+                        const card = sub.querySelector(".lesson-card");
+                        if (card) {
+                            scheduleData.cards.push({
+                                row: row,
+                                sub: sub.getAttribute("data-sub"),
+                                originId: card.getAttribute("data-origin-id")
+                            });
+                        }
+                    });
+                } else {
+                    const card = zone.querySelector(".lesson-card");
+                    if (card) {
+                        scheduleData.cards.push({
+                            row: row,
+                            sub: null,
+                            originId: card.getAttribute("data-origin-id")
+                        });
+                    }
+                }
+            });
+
+            const scheduleRef = ref(db, `schedules/${currentClass}_${currentDay}`);
+            set(scheduleRef, scheduleData);
+        }
+
+        function loadSchedule() {
+            const currentClass = classSelect.value;
+            const currentDay = daySelect.value;
+            const scheduleRef = ref(db, `schedules/${currentClass}_${currentDay}`);
+
+            onValue(scheduleRef, (snapshot) => {
+                document.querySelectorAll(".drop-zone").forEach(zone => {
+                    zone.className = "drop-zone";
+                    zone.innerHTML = "";
+                });
+
+                const parsedData = snapshot.val();
+                if (parsedData) {
+                    if (parsedData.layout) {
+                        for (const [row, type] of Object.entries(parsedData.layout)) {
+                            const zone = document.querySelector(`.drop-zone[data-row="${row}"]`);
+                            if (zone) {
+                                if (type === "double") {
+                                    zone.className = "drop-zone double-zone";
+                                    zone.innerHTML = `<div class="sub-zone" data-sub="1"></div><div class="sub-zone" data-sub="2"></div>`;
+                                } else if (type === "triple") {
+                                    zone.className = "drop-zone triple-zone";
+                                    zone.innerHTML = `<div class="sub-zone" data-sub="1"></div><div class="sub-zone" data-sub="2"></div><div class="sub-zone" data-sub="3"></div>`;
+                                }
+                            }
+                        }
+                    }
+
+                    const cardsList = parsedData.cards || [];
+                    cardsList.forEach(item => {
+                        let target;
+                        const zone = document.querySelector(`.drop-zone[data-row="${item.row}"]`);
+                        if (zone) {
+                            if (item.sub) target = zone.querySelector(`.sub-zone[data-sub="${item.sub}"]`);
+                            else target = zone;
+                            
+                            const originalCard = document.getElementById(item.originId);
+                            if (target && originalCard) {
+                                insertCardToZone(originalCard, target);
+                            }
+                        }
+                    });
+                }
+            });
+        }
+
+        classSelect.addEventListener("change", loadSchedule);
+        daySelect.addEventListener("change", loadSchedule);
+
+        document.getElementById("reset-btn").addEventListener("click", () => { 
+            const currentClass = classSelect.value;
+            const currentDay = daySelect.value;
+            if (confirm(`Θέλετε να καθαρίσετε το πρόγραμμα για την ημέρα ${currentDay} (${currentClass});`)) {
+                document.querySelectorAll(".drop-zone").forEach(zone => {
+                    zone.className = "drop-zone";
+                    zone.innerHTML = "";
+                }); 
+                const scheduleRef = ref(db, `schedules/${currentClass}_${currentDay}`);
+                set(scheduleRef, null);
+            }
+        }); 
+
+        loadSchedule();
+    });
+</script> 
+</body> 
+</html>
